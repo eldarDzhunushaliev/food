@@ -4,8 +4,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     //Tabs
     const tabsContent = document.querySelectorAll('.tabcontent'),
-        tabs = document.querySelectorAll('.tabheader__item'),
-        tabParent = document.querySelector('.tabheader__items');
+          tabs = document.querySelectorAll('.tabheader__item'),
+          tabParent = document.querySelector('.tabheader__items');
 
     function hideAllTabs() {
         tabsContent.forEach(item => {
@@ -17,9 +17,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const pickTab = function (i = 0) {
-        tabsContent[i].classList.add('show');
+        tabsContent[i].classList.add('show', 'fade');
         tabsContent[i].classList.remove('hide');
-        tabsContent[i].classList.add('fade');
 
         tabs[i].classList.add('tabheader__item_active');
     };
@@ -56,15 +55,36 @@ document.addEventListener('DOMContentLoaded', () => {
         return {total, days, hours, minutes, seconds};
     }
 
+    function getZero(num) {
+        if (num >= 0 && num < 10) {
+            return `0${num}`;
+        }
+        return num;
+    }
+
     function setClock(selector, endTime) {
         const timer = document.querySelector(selector),
-            days = timer.querySelector('#days'),
-            hours = timer.querySelector('#hours'),
-            minutes = timer.querySelector('#minutes'),
-            seconds = timer.querySelector('#seconds');
+              days = timer.querySelector('#days'),
+              hours = timer.querySelector('#hours'),
+              minutes = timer.querySelector('#minutes'),
+              seconds = timer.querySelector('#seconds'),
+              timeInterval = setInterval(updateClock, 1000);
+
+        updateClock();
 
         function updateClock() {
-            
+            const timeContainer = getTimeRemaining(endTime);
+
+            days.innerHTML = getZero(timeContainer.days);
+            hours.innerHTML = getZero(timeContainer.hours);
+            minutes.innerHTML = getZero(timeContainer.minutes);
+            seconds.innerHTML = getZero(timeContainer.seconds);
+
+            if (timeContainer.total <= 0) {
+                clearInterval(timeInterval);
+            }
         }
     }
+
+    setClock('.timer', deadLine);
 });
