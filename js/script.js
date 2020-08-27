@@ -87,4 +87,59 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     setClock('.timer', deadLine);
+
+    //Modal
+
+    const modal = document.querySelector('.modal'),
+    modalInputs = modal.querySelectorAll('input'),
+    modalName = modalInputs[0],
+    modalPhone = modalInputs[1],
+    modalButtonClose = document.querySelector('[data-close]'),
+    modalButtonsOpen = document.querySelectorAll('[data-modal]'),
+    modalButtonSubmit = modal.querySelector('button');
+    
+    const hideModal = function () {     
+        modal.classList.remove('show');
+        modalInputs.forEach(item => item.value = '');
+        document.body.style.overflow = '';
+    };
+
+    const showModal = function () {
+        modal.classList.add('show', 'fade');
+        document.body.style.overflow = 'hidden';
+        clearInterval(modalTimerID);
+    };
+
+    modal.addEventListener('click', event => {
+        const target = event.target;
+
+        if (target && target.classList.contains('modal')) {
+            hideModal();
+        }
+    });
+
+    modalButtonClose.addEventListener('click', hideModal);
+    modalButtonsOpen.forEach(item => item.addEventListener('click', showModal));
+    modalButtonSubmit.addEventListener('click', event => {
+        event.preventDefault();
+        alert(`${modalName.value}, thanks, we'll call you back on your phone number: ${modalPhone.value}`);
+        hideModal();
+    });
+
+    document.addEventListener('keyup', event => {
+        if (event.code === 'Escape' && modal.classList.contains('show')) {
+            hideModal();
+        }
+    });
+
+    const modalTimerID = setTimeout(showModal, 5000);
+
+    function showModalByScroll() {
+        if (window.pageYOffset + document.documentElement.clientHeight >= document.documentElement.scrollHeight) {
+            showModal();
+            window.removeEventListener('scroll', showModalByScroll);
+        }
+    }
+
+    window.addEventListener('scroll', showModalByScroll);
 });
