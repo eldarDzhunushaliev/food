@@ -97,9 +97,9 @@ document.addEventListener('DOMContentLoaded', () => {
     modalButtonClose = document.querySelector('[data-close]'),
     modalButtonsOpen = document.querySelectorAll('[data-modal]'),
     modalButtonSubmit = modal.querySelector('button');
-    
+
     const hideModal = function () {     
-        modal.classList.remove('show');
+        modal.classList.remove('show', 'fade');
         modalInputs.forEach(item => item.value = '');
         document.body.style.overflow = '';
     };
@@ -132,7 +132,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    const modalTimerID = setTimeout(showModal, 5000);
+    const modalTimerID = setTimeout(showModal, 15000);
 
     function showModalByScroll() {
         if (window.pageYOffset + document.documentElement.clientHeight >= document.documentElement.scrollHeight) {
@@ -142,4 +142,73 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     window.addEventListener('scroll', showModalByScroll);
+
+    //Menu
+
+    const menuItems = document.querySelectorAll('.menu__item');
+
+    class menuItem {
+        constructor (
+                subtitle, 
+                imageSource, 
+                imageAlternative,
+                description, 
+                price,
+                parentSelector,
+                ...classes
+                ) {
+            this.subtitle = subtitle;
+            this.imageSource = imageSource;
+            this.imageAlternative = imageAlternative;
+            this.description = description;
+            this.price = price;
+            this.transfer = 27;
+            this.changeToUAH();
+            this.parent = document.querySelector(parentSelector);
+            if (classes.length>0){this.classes = classes;} else {this.classes = ['menu__item'];}
+        }
+
+        changeToUAH() {
+            this.price = this.price * this.transfer;
+        }
+
+        addToMenu() {
+            const element = document.createElement('div');
+            this.classes.forEach(className => element.classList.add(className));
+            element.innerHTML = `
+                <img src="${this.imageSource}" alt="${this.imageAlternative}">
+                <h3 class="menu__item-subtitle">Меню "${this.subtitle}"</h3>
+                <div class="menu__item-descr">${this.description}</div>
+                <div class="menu__item-divider"></div>
+                <div class="menu__item-price">
+                    <div class="menu__item-cost">Цена:</div>
+                    <div class="menu__item-total"><span>${this.price}</span> грн/день</div>
+                </div>
+            `;
+            this.parent.append(element);
+        }
+    }
+
+    menuItems.forEach(item => item.remove());
+
+    const eliteMenuItem = new menuItem(
+            'Премиум',
+            'img/tabs/elite.jpg',
+            'elite',
+            'В меню “Премиум” мы используем не только красивый дизайн упаковки, но и качественное исполнение блюд. Красная рыба, морепродукты, фрукты - ресторанное меню без похода в ресторан!',
+            20.40,
+            '.menu .container',
+          ),
+          postMenuItem = new menuItem(
+              'Постное',
+              'img/tabs/post.jpg',
+              'post',
+              'Меню “Постное” - это тщательный подбор ингредиентов: полное отсутствие продуктов животного происхождения, молоко из миндаля, овса, кокоса или гречки, правильное количество белков за счет тофу и импортных вегетарианских стейков.',
+              15.90,
+              '.menu .container',
+              'menu__item'
+          );
+
+    eliteMenuItem.addToMenu();
+    postMenuItem.addToMenu();
 });
