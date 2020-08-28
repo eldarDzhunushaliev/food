@@ -92,11 +92,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const modal = document.querySelector('.modal'),
     modalInputs = modal.querySelectorAll('input'),
-    modalName = modalInputs[0],
-    modalPhone = modalInputs[1],
     modalButtonClose = document.querySelector('[data-close]'),
-    modalButtonsOpen = document.querySelectorAll('[data-modal]'),
-    modalButtonSubmit = modal.querySelector('button');
+    modalButtonsOpen = document.querySelectorAll('[data-modal]');
 
     const hideModal = function () {     
         modal.classList.remove('show', 'fade');
@@ -120,11 +117,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     modalButtonClose.addEventListener('click', hideModal);
     modalButtonsOpen.forEach(item => item.addEventListener('click', showModal));
-    modalButtonSubmit.addEventListener('click', event => {
-        event.preventDefault();
-        alert(`${modalName.value}, thanks, we'll call you back on your phone number: ${modalPhone.value}`);
-        hideModal();
-    });
 
     document.addEventListener('keyup', event => {
         if (event.code === 'Escape' && modal.classList.contains('show')) {
@@ -211,4 +203,61 @@ document.addEventListener('DOMContentLoaded', () => {
 
     eliteMenuItem.addToMenu();
     postMenuItem.addToMenu();
+
+    //Forms
+
+    const forms = document.querySelectorAll('form');
+
+    const message = {
+        loading: 'Loading',
+        success: "Thanks, we'll call you back soon",
+        failure: 'Something went wrong'
+    };
+
+    function postData(form) {
+        form.addEventListener('submit', event => {
+            event.preventDefault();
+
+            const statusMessage = document.createElement('div');
+            statusMessage.classList.add('status');
+            statusMessage.textContent = message.loading;
+            form.append(statusMessage);
+
+            const request = new XMLHttpRequest();
+            request.open('POST', 'server.php');
+
+            request.setRequestHeader('Content-type', 'application/json');
+            const formData = new FormData(form);
+
+            const object ={};
+            formData.forEach(function(value, key) {
+                object[key] = value;
+                console.log(key);
+                console.log(value);
+            });
+
+            const json = JSON.stringify(object);
+
+            request.send(json);
+
+            request.addEventListener('load', () => {
+                if (request.status === 200) {
+                    console.log(request.response);
+                    statusMessage.textContent = message.success;
+                    form.reset();
+                    setTimeout(() => {
+                        statusMessage.remove();
+                        hideModal();
+                    }, 2000);                    
+                } else {
+                    statusMessage.textContent = message.failure;
+                }
+            });
+        });
+    }
+
+    forms.forEach(item => {
+        postData(item);
+    });
+
 });
