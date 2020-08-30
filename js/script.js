@@ -109,8 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     modal.addEventListener('click', event => {
         const target = event.target;
-
-        if (target && target.classList.contains('modal')) {
+        if (target === modal || target.hasAttribute('data-close')) {
             hideModal();
         }
     });
@@ -124,7 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    const modalTimerID = setTimeout(showModal, 15000);
+    const modalTimerID = setTimeout(showModal, 50000);
 
     function showModalByScroll() {
         if (window.pageYOffset + document.documentElement.clientHeight >= document.documentElement.scrollHeight) {
@@ -209,7 +208,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const forms = document.querySelectorAll('form');
 
     const message = {
-        loading: 'Loading',
+        loading: 'img/form/spinner.svg',
         success: "Thanks, we'll call you back soon",
         failure: 'Something went wrong'
     };
@@ -218,10 +217,14 @@ document.addEventListener('DOMContentLoaded', () => {
         form.addEventListener('submit', event => {
             event.preventDefault();
 
-            const statusMessage = document.createElement('div');
-            statusMessage.classList.add('status');
-            statusMessage.textContent = message.loading;
+            const statusMessage = document.createElement('img');
+            statusMessage.src = message.loading;
+            statusMessage.style.cssText = `
+                display: block;
+                margin: 0 auto;
+            `;
             form.append(statusMessage);
+            form.insertAdjacentElement('afterend', statusMessage);
 
             const request = new XMLHttpRequest();
             request.open('POST', 'server.php');
@@ -229,11 +232,9 @@ document.addEventListener('DOMContentLoaded', () => {
             request.setRequestHeader('Content-type', 'application/json');
             const formData = new FormData(form);
 
-            const object ={};
+            const object = {};
             formData.forEach(function(value, key) {
                 object[key] = value;
-                console.log(key);
-                console.log(value);
             });
 
             const json = JSON.stringify(object);
@@ -243,18 +244,42 @@ document.addEventListener('DOMContentLoaded', () => {
             request.addEventListener('load', () => {
                 if (request.status === 200) {
                     console.log(request.response);
-                    statusMessage.textContent = message.success;
+                    showGratesModal(message.success);
                     form.reset();
-                    setTimeout(() => {
-                        statusMessage.remove();
-                        hideModal();
-                    }, 2000);                    
+                    statusMessage.remove();
                 } else {
-                    statusMessage.textContent = message.failure;
+                    showGratesModal(message.failure);
+                    statusMessage.remove();
                 }
             });
         });
     }
+
+    function showGratesModal(message) {
+        const previousModalDialog = document.querySelector('.modal__dialog');
+
+        previousModalDialog.classList.add('hide');
+        previousModalDialog.classList.remove('show');
+        showModal();
+
+        const gratesModal = document.createElement('div');
+        gratesModal.classList.add('modal__dialog');
+        gratesModal.innerHTML = `
+            <div class="modal__content">
+                <div class="modal__close" data-close>×</div>
+                <div class="modal__title">${message}</div>
+            </div>
+        `;
+
+        modal.append(gratesModal);
+        setTimeout(() => {
+            gratesModal.remove();
+            previousModalDialog.classList.add('show');
+            previousModalDialog.classList.remove('hide');
+            hideModal();
+        }, 4000);
+    }
+    
 
     forms.forEach(item => {
         postData(item);
