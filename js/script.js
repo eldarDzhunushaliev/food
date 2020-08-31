@@ -140,21 +140,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     class menuItem {
         constructor (
-                subtitle, 
                 imageSource, 
                 imageAlternative,
+                subtitle, 
                 description, 
                 price,
                 parentSelector,
                 ...classes
                 ) {
-            this.subtitle = subtitle;
             this.imageSource = imageSource;
             this.imageAlternative = imageAlternative;
+            this.subtitle = subtitle;
             this.description = description;
             this.price = price;
             this.transfer = 27;
             this.changeToUAH();
+            if (parentSelector === undefined) {parentSelector = '.menu .container';}
             this.parent = document.querySelector(parentSelector);
             if (classes.length>0){this.classes = classes;} else {this.classes = ['menu__item'];}
         }
@@ -181,28 +182,23 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     menuItems.forEach(item => item.remove());
+    
+    const getResource = async (url) => {
+        const res = await fetch(url);
 
-    const eliteMenuItem = new menuItem(
-            'Премиум',
-            'img/tabs/elite.jpg',
-            'elite',
-            'В меню “Премиум” мы используем не только красивый дизайн упаковки, но и качественное исполнение блюд. Красная рыба, морепродукты, фрукты - ресторанное меню без похода в ресторан!',
-            20.40,
-            '.menu .container',
-          ),
-          postMenuItem = new menuItem(
-              'Постное',
-              'img/tabs/post.jpg',
-              'post',
-              'Меню “Постное” - это тщательный подбор ингредиентов: полное отсутствие продуктов животного происхождения, молоко из миндаля, овса, кокоса или гречки, правильное количество белков за счет тофу и импортных вегетарианских стейков.',
-              15.90,
-              '.menu .container',
-              'menu__item'
-          );
+        if (!res.ok) {
+            throw new Error(`Could now fetch ${url}, status ${res.status}`);
+        }
 
-    eliteMenuItem.addToMenu();
-    postMenuItem.addToMenu();
+        return await res.json();
+    };
 
+    getResource('http://localhost:3000/menu')
+    .then(data => {
+        data.forEach(({img, altimg, title, descr, price}) => {
+            new menuItem(img, altimg, title, descr, price).addToMenu();
+        });
+    });
     //Forms
 
     const forms = document.querySelectorAll('form');
@@ -213,7 +209,19 @@ document.addEventListener('DOMContentLoaded', () => {
         failure: 'Something went wrong'
     };
 
-    function postData(form) {
+    const postData = async (url, data) => {
+        const res = await fetch(url, {
+            method: "POST",
+            headers: {
+                'Content-type': 'application/json'
+            },
+            body: data
+        });
+
+        return await res.json();
+    };
+
+    function bindPostData(form) {
         form.addEventListener('submit', event => {
             event.preventDefault();
 
@@ -228,19 +236,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const formData = new FormData(form);
 
-            const object = {};
-            formData.forEach(function(value, key) {
-                object[key] = value;
-            });
+            const json = JSON.stringify(Object.fromEntries(formData.entries()));
             
-            fetch('server.php', {
-                method: "POST",
-                headers: {
-                    'Content-type': 'application/json'
-                },
-                body: JSON.stringify(object)
-            })
-            .then(data => data.text())
+            postData('http://localhost:3000/requests', json)
             .then(data => {
                 console.log(data);
                 showThanksModal(message.success);
@@ -272,18 +270,22 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
 
         modal.append(thanksModal);
-        const timerThanksModalID = setTimeout(() => {
+
+        function hideThanksModal() {
             thanksModal.remove();
             previousModalDialog.classList.add('show');
             previousModalDialog.classList.remove('hide');
+        }
+
+        const timerThanksModalID = setTimeout(() => {
+            hideThanksModal();
             hideModal();
         }, 4000);
+
         modal.addEventListener('click', event => {
             const target = event.target;
             if (target === modal || target.hasAttribute('data-close')) {
-                thanksModal.remove();
-                previousModalDialog.classList.add('show');
-                previousModalDialog.classList.remove('hide');
+                hideThanksModal();
                 clearTimeout(timerThanksModalID);
             }
         }, {once:true});
@@ -291,10 +293,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     forms.forEach(item => {
-        postData(item);
+        bindPostData(item);
     });
 
-    fetch('http://localhost:3000/menu')
-    .then(data => data.json())
-    .then(res => console.log(res));
 });
