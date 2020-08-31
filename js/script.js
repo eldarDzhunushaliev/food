@@ -233,7 +233,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 object[key] = value;
             });
             
-            fetch('server1.php', {
+            fetch('server.php', {
                 method: "POST",
                 headers: {
                     'Content-type': 'application/json'
@@ -243,10 +243,10 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(data => data.text())
             .then(data => {
                 console.log(data);
-                showGratesModal(message.success);
+                showThanksModal(message.success);
             })
             .catch(() => {
-                showGratesModal(message.failure);
+                showThanksModal(message.failure);
             })
             .finally(() => {
                 statusMessage.remove();
@@ -255,32 +255,46 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    function showGratesModal(message) {
+    function showThanksModal(message) {
         const previousModalDialog = document.querySelector('.modal__dialog');
 
         previousModalDialog.classList.add('hide');
         previousModalDialog.classList.remove('show');
         showModal();
 
-        const gratesModal = document.createElement('div');
-        gratesModal.classList.add('modal__dialog');
-        gratesModal.innerHTML = `
+        const thanksModal = document.createElement('div');
+        thanksModal.classList.add('modal__dialog');
+        thanksModal.innerHTML = `
             <div class="modal__content">
                 <div class="modal__close" data-close>×</div>
                 <div class="modal__title">${message}</div>
             </div>
         `;
 
-        modal.append(gratesModal);
-        setTimeout(() => {
-            gratesModal.remove();
+        modal.append(thanksModal);
+        const timerThanksModalID = setTimeout(() => {
+            thanksModal.remove();
             previousModalDialog.classList.add('show');
             previousModalDialog.classList.remove('hide');
             hideModal();
         }, 4000);
+        modal.addEventListener('click', event => {
+            const target = event.target;
+            if (target === modal || target.hasAttribute('data-close')) {
+                thanksModal.remove();
+                previousModalDialog.classList.add('show');
+                previousModalDialog.classList.remove('hide');
+                clearTimeout(timerThanksModalID);
+            }
+        }, {once:true});
+        
     }
     
     forms.forEach(item => {
         postData(item);
     });
+
+    fetch('http://localhost:3000/menu')
+    .then(data => data.json())
+    .then(res => console.log(res));
 });
